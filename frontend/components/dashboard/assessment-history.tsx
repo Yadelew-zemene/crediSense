@@ -55,7 +55,10 @@ export default function AssessmentHistory({
   error,
 }: AssessmentHistoryProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section
+      id="assessment-history"
+      className="scroll-mt-28 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    >
       <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
         <h2 className="text-lg font-semibold tracking-tight text-slate-950">
           Recent assessments
@@ -69,10 +72,7 @@ export default function AssessmentHistory({
       {loading && (
         <div className="divide-y divide-slate-100">
           {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="animate-pulse px-5 py-5 sm:px-6"
-            >
+            <div key={item} className="animate-pulse px-5 py-5 sm:px-6">
               <div className="h-4 w-32 rounded bg-slate-200" />
               <div className="mt-3 h-3 w-48 rounded bg-slate-100" />
             </div>
@@ -107,8 +107,8 @@ export default function AssessmentHistory({
           </h3>
 
           <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
-            Complete your first applicant assessment and the result
-            will appear here.
+            Complete your first applicant assessment and the result will appear
+            here.
           </p>
 
           <Link
@@ -134,10 +134,10 @@ export default function AssessmentHistory({
             <div className="divide-y divide-slate-100">
               {assessments.map((assessment) => (
                 <Link
-  key={assessment.id}
-  href={`/dashboard/assessments/${assessment.id}`}
-  className="group grid grid-cols-[1.5fr_1.4fr_1fr_1fr_0.7fr] items-center px-6 py-4 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
->
+                  key={assessment.id}
+                  href={`/dashboard/assessments/${assessment.id}`}
+                  className="group grid grid-cols-[1.5fr_1.4fr_1fr_1fr_0.7fr] items-center px-6 py-4 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                >
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       {formatDate(assessment.created_at)}
@@ -151,15 +151,11 @@ export default function AssessmentHistory({
                   <DecisionBadge decision={assessment.decision} />
 
                   <span className="text-sm font-semibold text-slate-900">
-                    {formatProbability(
-                      assessment.default_probability,
-                    )}
+                    {formatProbability(assessment.default_probability)}
                   </span>
 
                   <span className="text-sm text-slate-600">
-                    {formatProbability(
-                      assessment.decision_threshold,
-                    )}
+                    {formatProbability(assessment.decision_threshold)}
                   </span>
 
                   <span className="text-sm text-slate-600">
@@ -173,10 +169,10 @@ export default function AssessmentHistory({
           <div className="divide-y divide-slate-100 md:hidden">
             {assessments.map((assessment) => (
               <Link
-  key={assessment.id}
-  href={`/dashboard/assessments/${assessment.id}`}
-  className="group block px-5 py-5 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
->
+                key={assessment.id}
+                href={`/dashboard/assessments/${assessment.id}`}
+                className="group block px-5 py-5 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
@@ -198,21 +194,15 @@ export default function AssessmentHistory({
                     </p>
 
                     <p className="mt-1 text-sm font-semibold text-slate-900">
-                      {formatProbability(
-                        assessment.default_probability,
-                      )}
+                      {formatProbability(assessment.default_probability)}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500">
-                      Decision threshold
-                    </p>
+                    <p className="text-xs text-slate-500">Decision threshold</p>
 
                     <p className="mt-1 text-sm font-semibold text-slate-900">
-                      {formatProbability(
-                        assessment.decision_threshold,
-                      )}
+                      {formatProbability(assessment.decision_threshold)}
                     </p>
                   </div>
                 </div>
