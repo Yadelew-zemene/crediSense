@@ -4,6 +4,7 @@ export type Gender = "M" | "F";
 
 export type YesNo = "Y" | "N";
 
+
 export interface ApplicantRequest {
   contract_type: ContractType;
   gender: Gender;
@@ -94,4 +95,44 @@ export interface AssessmentDetail {
   decision_threshold: number;
   prediction: number;
   decision: string;
+}
+
+export interface CompanyRegistrationRequest {
+  company_name: string;
+  company_email: string;
+  phone?: string | null;
+  industry?: string | null;
+  country?: string | null;
+  address?: string | null;
+  full_name: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface CompanyResponse {
+  id: string;
+  company_name: string;
+  email: string;
+  phone: string | null;
+  industry: string | null;
+  country: string | null;
+  address: string | null;
+}
+
+export interface UserResponse {
+  id: string;
+  company_id: string;
+  full_name: string;
+  email: string;
+  is_active: boolean;
+}
+
+export interface AuthResponse {
+  user: UserResponse;
+  company: CompanyResponse;
 }
