@@ -1,25 +1,119 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Index
+from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
+    ForeignKey,
     Integer,
     Numeric,
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+) 
 
 
 class Base(DeclarativeBase):
     pass
 
+class Company(Base):
+    __tablename__ = "companies"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    company_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True,
+    )
+
+    phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    user: Mapped["User | None"] = relationship(
+        back_populates="company",
+        uselist=False,
+    )
+
+    assessments: Mapped[list["Assessment"]] = relationship(
+        back_populates="company",
+    )
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="RESTRICT"),
+        nullable=False,
+        unique=True,
+    )
+
+    full_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    company: Mapped["Company"] = relationship(
+        back_populates="user",
+    )
 class Assessment(Base):
     __tablename__ = "assessments"
 
@@ -27,6 +121,15 @@ class Assessment(Base):
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    company: Mapped["Company"] = relationship(
+        back_populates="assessments",
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -278,5 +381,10 @@ Index(
 Index(
     "idx_assessments_decision_created_at",
     Assessment.decision,
+    Assessment.created_at.desc(),
+)
+Index(
+    "idx_assessments_company_created_at",
+    Assessment.company_id,
     Assessment.created_at.desc(),
 )
