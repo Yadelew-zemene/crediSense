@@ -56,7 +56,7 @@ export default function DashboardPage() {
       : "0.0";
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-full bg-slate-50">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -65,13 +65,13 @@ export default function DashboardPage() {
               Credit Risk Assessment
             </p>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Assessment Dashboard
-            </h1>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+              Your overview
+            </h2>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Review assessment activity and monitor credit-risk
-              outcomes from one place.
+              Review assessment activity and monitor credit-risk outcomes from
+              one place.
             </p>
           </div>
 
@@ -94,24 +94,18 @@ export default function DashboardPage() {
               {loading ? "—" : totalAssessments}
             </p>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Completed assessments
-            </p>
+            <p className="mt-2 text-sm text-slate-500">Completed assessments</p>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
-              Default Risk
-            </p>
+            <p className="text-sm font-medium text-slate-500">Default Risk</p>
 
             <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
               {loading ? "—" : defaultRiskCount}
             </p>
 
             <p className="mt-2 text-sm text-slate-500">
-              {loading
-                ? "Loading..."
-                : `${defaultRiskRate}% of assessments`}
+              {loading ? "Loading..." : `${defaultRiskRate}% of assessments`}
             </p>
           </div>
 
@@ -125,9 +119,7 @@ export default function DashboardPage() {
             </p>
 
             <p className="mt-2 text-sm text-slate-500">
-              {loading
-                ? "Loading..."
-                : `${noDefaultRiskRate}% of assessments`}
+              {loading ? "Loading..." : `${noDefaultRiskRate}% of assessments`}
             </p>
           </div>
         </section>
@@ -141,6 +133,6 @@ export default function DashboardPage() {
           />
         </div>
       </section>
-    </main>
+    </div>
   );
 }
