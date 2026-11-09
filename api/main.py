@@ -14,11 +14,15 @@ from scripts.inference import load_model_artifact, predict_applicant
 from api.db.repository import get_assessments,save_assessment,get_assessment
 from api.schemas import AssessmentHistoryItem,AssessmentDetail
 
+from api.auth.router import router as auth_router
+from api.auth.dependencies import CurrentUser
+
 app = FastAPI(
     title="Loan Default Prediction API",
     description="API for predicting loan default risk.",
     version="1.0.0",
 )
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,8 +59,10 @@ def health_check():
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(
+    current_user: CurrentUser,
     request: ApplicantRequest,
     db: Session = Depends(get_db),
+    
 ):
     """
     Predict loan default risk for one applicant.
@@ -78,6 +84,7 @@ def predict(
             db,
             request,
             result,
+            company_id=current_user.company_id,
         )
 
         return result
@@ -96,9 +103,10 @@ def predict(
     response_model=list[AssessmentHistoryItem],
 )
 def get_assessment_history(
+    current_user: CurrentUser,
     db: Session = Depends(get_db),
 ):
-    assessments = get_assessments(db)
+    assessments = get_assessments(db,company_id=current_user.company_id)
 
     return [
         AssessmentHistoryItem(
@@ -117,10 +125,11 @@ def get_assessment_history(
     response_model=AssessmentDetail,
 )
 def get_assessment_detail(
+    current_user: CurrentUser,
     assessment_id: UUID,
     db: Session = Depends(get_db),
 ):
-    assessment = get_assessment(db, assessment_id)
+    assessment = get_assessment(db, assessment_id,company_id=current_user.company_id,)
 
     if assessment is None:
         raise HTTPException(
