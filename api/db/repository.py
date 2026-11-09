@@ -1,15 +1,20 @@
-from sqlalchemy.orm import Session
 from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from api.db.models import Assessment
 from api.schemas import ApplicantRequest
-from sqlalchemy import select
+
 
 def save_assessment(
     db: Session,
     applicant: ApplicantRequest,
     prediction: dict,
+    company_id: UUID,
 ) -> Assessment:
     assessment = Assessment(
+        company_id=company_id,
         contract_type=applicant.contract_type,
         gender=applicant.gender,
         owns_car=applicant.owns_car,
@@ -47,23 +52,31 @@ def save_assessment(
     db.refresh(assessment)
 
     return assessment
+
+
 def get_assessments(
     db: Session,
+    company_id: UUID,
     limit: int = 20,
 ) -> list[Assessment]:
     statement = (
         select(Assessment)
+        .where(Assessment.company_id == company_id)
         .order_by(Assessment.created_at.desc())
         .limit(limit)
     )
 
     return list(db.scalars(statement).all())
+
+
 def get_assessment(
     db: Session,
     assessment_id: UUID,
+    company_id: UUID,
 ) -> Assessment | None:
     statement = select(Assessment).where(
-        Assessment.id == assessment_id
+        Assessment.id == assessment_id,
+        Assessment.company_id == company_id,
     )
 
     return db.scalar(statement)
