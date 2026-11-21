@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
+  ArrowRight,
   Building2,
   CalendarDays,
   CheckCircle2,
-  CircleDollarSign,
   Clock3,
   FileText,
-  Home,
   Info,
   MapPin,
   ShieldCheck,
@@ -20,19 +20,26 @@ import {
   WalletCards,
 } from "lucide-react";
 
-import {
-  getAssessment,
-  type AssessmentDetail,
-} from "@/lib/api";
+import { getAssessment, type AssessmentDetail } from "@/lib/api";
+
+// -----------------------------------------------------------------------------
+// Formatting helpers
+// -----------------------------------------------------------------------------
 
 function formatDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function formatPercentage(value: number) {
@@ -50,9 +57,7 @@ function formatMoney(value: number | null) {
     return "Not provided";
   }
 
-  return new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
-  }).format(value);
+  return formatNumber(value);
 }
 
 function formatYears(value: number | null) {
@@ -71,89 +76,137 @@ function formatValue(value: string | number | null) {
   return String(value);
 }
 
+function formatOwnership(value: string) {
+  if (value === "Y") return "Yes";
+  if (value === "N") return "No";
+
+  return value;
+}
+
+function formatGender(value: string) {
+  if (value === "M") return "Male";
+  if (value === "F") return "Female";
+
+  return value;
+}
+
+// -----------------------------------------------------------------------------
+// Shared styles
+// -----------------------------------------------------------------------------
+
+const cardClass =
+  "overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]";
+
+const primaryButtonClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-600/15 transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+
+const secondaryButtonClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+
+// -----------------------------------------------------------------------------
+// Loading state
+// -----------------------------------------------------------------------------
+
 function LoadingState() {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="animate-pulse">
-          <div className="h-4 w-36 rounded bg-slate-200" />
-          <div className="mt-4 h-9 w-72 rounded bg-slate-200" />
-          <div className="mt-3 h-4 w-96 max-w-full rounded bg-slate-100" />
+    <div className="mx-auto w-full max-w-7xl animate-pulse space-y-7 px-4 py-7 sm:px-6 lg:px-8">
+      <div>
+        <div className="h-4 w-32 rounded bg-slate-200" />
+        <div className="mt-5 h-9 w-64 rounded-lg bg-slate-200" />
+        <div className="mt-3 h-4 w-80 max-w-full rounded bg-slate-100" />
+      </div>
 
-          <div className="mt-8 h-64 rounded-2xl border border-slate-200 bg-white" />
+      <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-            <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-          </div>
-        </div>
-      </section>
-    </main>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
+        <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
+      </div>
+
+      <div className="h-48 rounded-2xl border border-slate-200 bg-white" />
+    </div>
   );
 }
 
+// -----------------------------------------------------------------------------
+// Error state
+// -----------------------------------------------------------------------------
+
 function ErrorState({ message }: { message: string }) {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center px-4 py-12 sm:px-6">
-        <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
-            <Info className="h-5 w-5" />
-          </div>
-
-          <h1 className="mt-5 text-xl font-semibold text-slate-950">
-            Unable to load assessment
-          </h1>
-
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-            {message}
-          </p>
-
-          <Link
-            href="/dashboard"
-            className="mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
-          </Link>
+    <div className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center px-4 py-12 sm:px-6">
+      <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-10">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+          <Info className="h-6 w-6" />
         </div>
-      </section>
-    </main>
+
+        <h1 className="mt-5 text-xl font-semibold tracking-tight text-slate-950">
+          Unable to load assessment
+        </h1>
+
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+          {message}
+        </p>
+
+        <Link href="/dashboard" className={`${primaryButtonClass} mt-7`}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Section components
+// -----------------------------------------------------------------------------
+
+function SectionHeader({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description?: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50/80 via-white to-cyan-50/40 px-5 py-5 sm:px-6">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-white text-blue-600 shadow-sm">
+          <Icon className="h-[18px] w-[18px]" />
+        </div>
+
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold tracking-tight text-slate-950">
+            {title}
+          </h2>
+
+          {description && (
+            <p className="mt-1 text-sm leading-5 text-slate-500">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function DetailSection({
   title,
   description,
-  icon: Icon,
+  icon,
   children,
 }: {
   title: string;
   description?: string;
-  icon: typeof UserRound;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-            <Icon className="h-4 w-4" />
-          </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-slate-950">
-              {title}
-            </h2>
-
-            {description && (
-              <p className="mt-1 text-sm text-slate-500">
-                {description}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+    <section className={cardClass}>
+      <SectionHeader title={title} description={description} icon={icon} />
 
       <div className="p-5 sm:p-6">{children}</div>
     </section>
@@ -171,12 +224,12 @@ function DetailGrid({
   return (
     <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
       {items.map((item) => (
-        <div key={item.label}>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <div key={item.label} className="min-w-0">
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
             {item.label}
           </dt>
 
-          <dd className="mt-1.5 text-sm font-medium text-slate-900">
+          <dd className="mt-1.5 break-words text-sm font-medium text-slate-800">
             {item.value}
           </dd>
         </div>
@@ -185,24 +238,53 @@ function DetailGrid({
   );
 }
 
+// -----------------------------------------------------------------------------
+// Assessment outcome
+// -----------------------------------------------------------------------------
+
 function DecisionBadge({ decision }: { decision: string }) {
   const isRisk = decision === "DEFAULT RISK";
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold ${
         isRisk
-          ? "bg-red-50 text-red-700"
-          : "bg-emerald-50 text-emerald-700"
+          ? "border-red-100 bg-red-50 text-red-700"
+          : "border-emerald-100 bg-emerald-50 text-emerald-700"
       }`}
     >
-      <span
-        className={`h-2 w-2 rounded-full ${
-          isRisk ? "bg-red-500" : "bg-emerald-500"
-        }`}
-      />
+      {isRisk ? (
+        <span className="h-2 w-2 rounded-full bg-red-500" />
+      ) : (
+        <CheckCircle2 className="h-4 w-4" />
+      )}
+
       {decision}
     </span>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+        {value}
+      </p>
+
+      <p className="mt-1.5 text-xs text-slate-500">{description}</p>
+    </div>
   );
 }
 
@@ -213,43 +295,65 @@ function ProbabilityBar({
   probability: number;
   threshold: number;
 }) {
-  const probabilityPercent = Math.min(
-    Math.max(probability * 100, 0),
-    100,
-  );
+  const probabilityPercent = Math.min(Math.max(probability * 100, 0), 100);
 
-  const thresholdPercent = Math.min(
-    Math.max(threshold * 100, 0),
-    100,
-  );
+  const thresholdPercent = Math.min(Math.max(threshold * 100, 0), 100);
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>0%</span>
-        <span>100%</span>
+    <div className="mt-7 border-t border-slate-100 pt-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800">
+            Probability comparison
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Estimated default probability against the configured threshold.
+          </p>
+        </div>
+
+        <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+          Threshold: {formatPercentage(threshold)}
+        </span>
       </div>
 
-      <div className="relative mt-2 h-3 rounded-full bg-slate-100">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-slate-800"
-          style={{ width: `${probabilityPercent}%` }}
-        />
+      <div
+        className="mt-5"
+        role="img"
+        aria-label={`Estimated default probability ${formatPercentage(probability)}. Decision threshold ${formatPercentage(threshold)}.`}
+      >
+        <div className="relative h-3 rounded-full bg-slate-100">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all"
+            style={{ width: `${probabilityPercent}%` }}
+          />
 
-        <div
-          className="absolute top-1/2 h-5 w-0.5 -translate-y-1/2 bg-blue-600"
-          style={{ left: `${thresholdPercent}%` }}
-        />
+          <div
+            className="absolute top-1/2 z-10 h-5 w-1 -translate-y-1/2 rounded-full bg-slate-800 ring-2 ring-white"
+            style={{
+              left: `${thresholdPercent}%`,
+              transform: `translate(-50%, -50%)`,
+            }}
+          />
+        </div>
+
+        <div className="mt-2 flex justify-between text-[11px] font-medium text-slate-400">
+          <span>0%</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span>75%</span>
+          <span>100%</span>
+        </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
-        <span className="inline-flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-slate-800" />
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+        <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+          <span className="h-2.5 w-2.5 rounded-sm bg-gradient-to-r from-blue-500 to-cyan-500" />
           Estimated probability
         </span>
 
-        <span className="inline-flex items-center gap-2">
-          <span className="h-3 w-0.5 bg-blue-600" />
+        <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+          <span className="h-3 w-1 rounded-full bg-slate-800" />
           Decision threshold
         </span>
       </div>
@@ -257,40 +361,211 @@ function ProbabilityBar({
   );
 }
 
+function OutcomeSection({ assessment }: { assessment: AssessmentDetail }) {
+  const isRisk = assessment.decision === "DEFAULT RISK";
+
+  return (
+    <section className={cardClass}>
+      <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50/80 via-white to-cyan-50/50 px-5 py-5 sm:px-7 sm:py-6">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">
+          <ShieldCheck className="h-4 w-4" />
+          Assessment outcome
+        </div>
+
+        <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <DecisionBadge decision={assessment.decision} />
+
+            <h2 className="mt-4 text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
+              {isRisk
+                ? "Default risk identified"
+                : "Below the configured risk threshold"}
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {isRisk
+                ? "The estimated probability of default is at or above the configured decision threshold."
+                : "The estimated probability of default is below the configured decision threshold."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:min-w-[380px]">
+            <MetricCard
+              label="Default probability"
+              value={formatPercentage(assessment.default_probability)}
+              description="Model-estimated probability"
+            />
+
+            <MetricCard
+              label="Decision threshold"
+              value={formatPercentage(assessment.decision_threshold)}
+              description="Configured classification threshold"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-5 sm:px-7">
+        <ProbabilityBar
+          probability={assessment.default_probability}
+          threshold={assessment.decision_threshold}
+        />
+      </div>
+
+      <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-7">
+        <div className="flex items-start gap-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+
+          <p className="text-xs leading-5 text-slate-500">
+            This result is model-generated decision support, not a final lending
+            decision. It should be considered alongside institutional lending
+            policies, applicant information, and appropriate human review.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Financial profile
+// -----------------------------------------------------------------------------
+
+function FinancialMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-4 transition hover:border-blue-100">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-2 break-words text-lg font-semibold tracking-tight text-slate-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FinancialSection({ assessment }: { assessment: AssessmentDetail }) {
+  return (
+    <DetailSection
+      title="Financial profile"
+      description="Financial values submitted as part of the assessment."
+      icon={WalletCards}
+    >
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <FinancialMetric
+          label="Annual income"
+          value={formatMoney(assessment.annual_income)}
+        />
+
+        <FinancialMetric
+          label="Credit amount"
+          value={formatMoney(assessment.credit_amount)}
+        />
+
+        <FinancialMetric
+          label="Annuity amount"
+          value={formatMoney(assessment.annuity_amount)}
+        />
+
+        <FinancialMetric
+          label="Goods price"
+          value={formatMoney(assessment.goods_price)}
+        />
+      </div>
+    </DetailSection>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Model information
+// -----------------------------------------------------------------------------
+
+function ModelInformation({ assessment }: { assessment: AssessmentDetail }) {
+  return (
+    <section className={cardClass}>
+      <SectionHeader
+        title="Model information"
+        description="Technical metadata recorded with this assessment."
+        icon={FileText}
+      />
+
+      <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            Model version
+          </p>
+
+          <p className="mt-2 break-words text-sm font-semibold text-slate-900">
+            {assessment.model_version}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            Prediction output
+          </p>
+
+          <p className="mt-2 text-sm font-semibold text-slate-900">
+            {assessment.prediction}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Main page
+// -----------------------------------------------------------------------------
+
 export default function AssessmentDetailPage() {
   const params = useParams<{ id: string }>();
   const assessmentId = params.id;
 
-  const [assessment, setAssessment] =
-    useState<AssessmentDetail | null>(null);
+  const [assessment, setAssessment] = useState<AssessmentDetail | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!assessmentId) {
+      setLoading(false);
+      setError("Assessment ID is missing.");
       return;
     }
+
+    let cancelled = false;
 
     async function loadAssessment() {
       try {
         setLoading(true);
         setError(null);
+        setAssessment(null);
 
         const data = await getAssessment(assessmentId);
 
-        setAssessment(data);
+        if (!cancelled) {
+          setAssessment(data);
+        }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load assessment.",
-        );
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Unable to load assessment.",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadAssessment();
+
+    return () => {
+      cancelled = true;
+    };
   }, [assessmentId]);
 
   if (loading) {
@@ -298,442 +573,237 @@ export default function AssessmentDetailPage() {
   }
 
   if (error || !assessment) {
-    return (
-      <ErrorState
-        message={error ?? "Assessment not found."}
-      />
-    );
+    return <ErrorState message={error ?? "Assessment not found."} />;
   }
 
-  const isRisk = assessment.decision === "DEFAULT RISK";
-
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Page header */}
-        <header>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
-          </Link>
+    <div className="mx-auto w-full max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-8">
+      {/* Page header */}
+      <header>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to dashboard
+        </Link>
 
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600">
-                Credit Risk Assessment
-              </p>
-
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                Assessment Detail
-              </h1>
-
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
-                <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="h-4 w-4" />
-                  {formatDate(assessment.created_at)}
-                </span>
-
-                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
-
-                <span>
-                  Model {assessment.model_version}
-                </span>
-              </div>
+        <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
+              <ShieldCheck className="h-4 w-4" />
+              Credit Risk Assessment
             </div>
 
-            <Link
-              href="/assessment"
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              New Assessment
-            </Link>
-          </div>
-        </header>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+              Assessment Details
+            </h1>
 
-        {/* Outcome */}
-        <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="p-5 sm:p-7">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <ShieldCheck className="h-4 w-4" />
-                  Assessment outcome
-                </div>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 text-slate-400" />
+                {formatDate(assessment.created_at)}
+              </span>
 
-                <div className="mt-4">
-                  <DecisionBadge decision={assessment.decision} />
-                </div>
+              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
 
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-                  {isRisk
-                    ? "The estimated probability of default is at or above the configured decision threshold."
-                    : "The estimated probability of default is below the configured decision threshold."}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-8 border-t border-slate-100 pt-5 lg:min-w-[380px] lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    Default probability
-                  </p>
-
-                  <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                    {formatPercentage(
-                      assessment.default_probability,
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    Decision threshold
-                  </p>
-
-                  <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                    {formatPercentage(
-                      assessment.decision_threshold,
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <ProbabilityBar
-              probability={assessment.default_probability}
-              threshold={assessment.decision_threshold}
-            />
-          </div>
-
-          <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-7">
-            <div className="flex items-start gap-3">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-
-              <p className="text-xs leading-5 text-slate-500">
-                This result is model-generated decision support. It
-                should be considered alongside institutional lending
-                policies, applicant information, and appropriate human
-                review.
-              </p>
+              <span className="inline-flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-slate-400" />
+                Model {assessment.model_version}
+              </span>
             </div>
           </div>
-        </section>
 
-        {/* Applicant information */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <DetailSection
-            title="Applicant information"
-            description="Personal and application characteristics recorded for this assessment."
-            icon={UserRound}
-          >
-            <DetailGrid
-              items={[
-                {
-                  label: "Contract type",
-                  value: assessment.contract_type,
-                },
-                {
-                  label: "Gender",
-                  value:
-                    assessment.gender === "M"
-                      ? "Male"
-                      : assessment.gender === "F"
-                        ? "Female"
-                        : assessment.gender,
-                },
-                {
-                  label: "Education",
-                  value: assessment.education_type,
-                },
-                {
-                  label: "Income type",
-                  value: assessment.income_type,
-                },
-                {
-                  label: "Occupation",
-                  value: formatValue(
-                    assessment.occupation_type,
-                  ),
-                },
-                {
-                  label: "Housing type",
-                  value: assessment.housing_type,
-                },
-              ]}
-            />
-          </DetailSection>
-
-          <DetailSection
-            title="Household & ownership"
-            description="Household composition and ownership indicators."
-            icon={Users}
-          >
-            <DetailGrid
-              items={[
-                {
-                  label: "Family status",
-                  value: assessment.family_status,
-                },
-                {
-                  label: "Family members",
-                  value: formatNumber(
-                    assessment.family_members,
-                  ),
-                },
-                {
-                  label: "Children",
-                  value: formatNumber(
-                    assessment.children_count,
-                  ),
-                },
-                {
-                  label: "Owns car",
-                  value:
-                    assessment.owns_car === "Y"
-                      ? "Yes"
-                      : assessment.owns_car === "N"
-                        ? "No"
-                        : assessment.owns_car,
-                },
-                {
-                  label: "Owns realty",
-                  value:
-                    assessment.owns_realty === "Y"
-                      ? "Yes"
-                      : assessment.owns_realty === "N"
-                        ? "No"
-                        : assessment.owns_realty,
-                },
-              ]}
-            />
-          </DetailSection>
-        </div>
-
-        {/* Financial profile */}
-        <div className="mt-6">
-          <DetailSection
-            title="Financial profile"
-            description="Financial values submitted as part of the assessment."
-            icon={WalletCards}
-          >
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Annual income
-                </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {formatMoney(assessment.annual_income)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Credit amount
-                </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {formatMoney(assessment.credit_amount)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Annuity amount
-                </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {formatMoney(assessment.annuity_amount)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Goods price
-                </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {formatMoney(assessment.goods_price)}
-                </p>
-              </div>
-            </div>
-          </DetailSection>
-        </div>
-
-        {/* Employment & history */}
-        <div className="mt-6">
-          <DetailSection
-            title="Employment & history"
-            description="Time-based applicant information used in the assessment."
-            icon={Clock3}
-          >
-            <DetailGrid
-              items={[
-                {
-                  label: "Age",
-                  value: formatYears(assessment.age_years),
-                },
-                {
-                  label: "Employment",
-                  value: formatYears(
-                    assessment.employment_years,
-                  ),
-                },
-                {
-                  label: "Registration history",
-                  value: formatYears(
-                    assessment.registration_years,
-                  ),
-                },
-                {
-                  label: "ID published",
-                  value: formatYears(
-                    assessment.id_published_years,
-                  ),
-                },
-                {
-                  label: "Car age",
-                  value: formatYears(assessment.car_age),
-                },
-              ]}
-            />
-          </DetailSection>
-        </div>
-
-        {/* Additional signals */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <DetailSection
-            title="Regional information"
-            description="Regional indicators recorded for the assessment."
-            icon={MapPin}
-          >
-            <DetailGrid
-              items={[
-                {
-                  label: "Population relative",
-                  value:
-                    assessment.region_population_relative ===
-                    null
-                      ? "Not provided"
-                      : formatNumber(
-                          assessment.region_population_relative,
-                        ),
-                },
-                {
-                  label: "Region rating",
-                  value: formatValue(
-                    assessment.region_rating,
-                  ),
-                },
-                {
-                  label: "City rating",
-                  value: formatValue(
-                    assessment.region_rating_city,
-                  ),
-                },
-              ]}
-            />
-          </DetailSection>
-
-          <DetailSection
-            title="External model signals"
-            description="External source values stored with the assessment."
-            icon={Building2}
-          >
-            <DetailGrid
-              items={[
-                {
-                  label: "External source 1",
-                  value:
-                    assessment.external_source_1 === null
-                      ? "Not provided"
-                      : formatPercentage(
-                          assessment.external_source_1,
-                        ),
-                },
-                {
-                  label: "External source 2",
-                  value:
-                    assessment.external_source_2 === null
-                      ? "Not provided"
-                      : formatPercentage(
-                          assessment.external_source_2,
-                        ),
-                },
-                {
-                  label: "External source 3",
-                  value:
-                    assessment.external_source_3 === null
-                      ? "Not provided"
-                      : formatPercentage(
-                          assessment.external_source_3,
-                        ),
-                },
-              ]}
-            />
-          </DetailSection>
-        </div>
-
-        {/* Model information */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-                <FileText className="h-4 w-4" />
-              </div>
-
-              <div>
-                <h2 className="text-base font-semibold text-slate-950">
-                  Model information
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Metadata recorded with this assessment.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-              <div>
-                <p className="text-xs text-slate-400">
-                  Model version
-                </p>
-
-                <p className="mt-1 font-medium text-slate-900">
-                  {assessment.model_version}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Prediction
-                </p>
-
-                <p className="mt-1 font-medium text-slate-900">
-                  {assessment.prediction}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer actions */}
-        <div className="flex flex-col gap-3 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            href="/dashboard"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
-          </Link>
-
-          <Link
-            href="/assessment"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            Start new assessment
+          <Link href="/assessment" className={primaryButtonClass}>
+            New assessment
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      </section>
-    </main>
+      </header>
+
+      {/* Assessment outcome */}
+      <OutcomeSection assessment={assessment} />
+
+      {/* Applicant and household information */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DetailSection
+          title="Applicant information"
+          description="Personal and application characteristics recorded for this assessment."
+          icon={UserRound}
+        >
+          <DetailGrid
+            items={[
+              {
+                label: "Contract type",
+                value: assessment.contract_type,
+              },
+              {
+                label: "Gender",
+                value: formatGender(assessment.gender),
+              },
+              {
+                label: "Education",
+                value: assessment.education_type,
+              },
+              {
+                label: "Income type",
+                value: assessment.income_type,
+              },
+              {
+                label: "Occupation",
+                value: formatValue(assessment.occupation_type),
+              },
+              {
+                label: "Housing type",
+                value: assessment.housing_type,
+              },
+            ]}
+          />
+        </DetailSection>
+
+        <DetailSection
+          title="Household & ownership"
+          description="Household composition and ownership indicators."
+          icon={Users}
+        >
+          <DetailGrid
+            items={[
+              {
+                label: "Family status",
+                value: assessment.family_status,
+              },
+              {
+                label: "Family members",
+                value: formatNumber(assessment.family_members),
+              },
+              {
+                label: "Children",
+                value: formatNumber(assessment.children_count),
+              },
+              {
+                label: "Owns car",
+                value: formatOwnership(assessment.owns_car),
+              },
+              {
+                label: "Owns realty",
+                value: formatOwnership(assessment.owns_realty),
+              },
+            ]}
+          />
+        </DetailSection>
+      </div>
+
+      {/* Financial profile */}
+      <FinancialSection assessment={assessment} />
+
+      {/* Employment history */}
+      <DetailSection
+        title="Employment & history"
+        description="Time-based applicant information used in the assessment."
+        icon={Clock3}
+      >
+        <DetailGrid
+          items={[
+            {
+              label: "Age",
+              value: formatYears(assessment.age_years),
+            },
+            {
+              label: "Employment",
+              value: formatYears(assessment.employment_years),
+            },
+            {
+              label: "Registration history",
+              value: formatYears(assessment.registration_years),
+            },
+            {
+              label: "ID published",
+              value: formatYears(assessment.id_published_years),
+            },
+            {
+              label: "Car age",
+              value: formatYears(assessment.car_age),
+            },
+          ]}
+        />
+      </DetailSection>
+
+      {/* Regional and external information */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DetailSection
+          title="Regional information"
+          description="Regional indicators recorded for the assessment."
+          icon={MapPin}
+        >
+          <DetailGrid
+            items={[
+              {
+                label: "Population relative",
+                value:
+                  assessment.region_population_relative === null
+                    ? "Not provided"
+                    : formatNumber(assessment.region_population_relative),
+              },
+              {
+                label: "Region rating",
+                value: formatValue(assessment.region_rating),
+              },
+              {
+                label: "City rating",
+                value: formatValue(assessment.region_rating_city),
+              },
+            ]}
+          />
+        </DetailSection>
+
+        <DetailSection
+          title="External model signals"
+          description="External source values stored with the assessment."
+          icon={Building2}
+        >
+          <DetailGrid
+            items={[
+              {
+                label: "External source 1",
+                value:
+                  assessment.external_source_1 === null
+                    ? "Not provided"
+                    : formatPercentage(assessment.external_source_1),
+              },
+              {
+                label: "External source 2",
+                value:
+                  assessment.external_source_2 === null
+                    ? "Not provided"
+                    : formatPercentage(assessment.external_source_2),
+              },
+              {
+                label: "External source 3",
+                value:
+                  assessment.external_source_3 === null
+                    ? "Not provided"
+                    : formatPercentage(assessment.external_source_3),
+              },
+            ]}
+          />
+        </DetailSection>
+      </div>
+
+      {/* Model metadata */}
+      <ModelInformation assessment={assessment} />
+
+      {/* Footer actions */}
+      <footer className="flex flex-col gap-3 border-t border-slate-200/80 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <Link href="/dashboard" className={secondaryButtonClass}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to dashboard
+        </Link>
+
+        <Link href="/assessment" className={primaryButtonClass}>
+          <CheckCircle2 className="h-4 w-4" />
+          Start new assessment
+        </Link>
+      </footer>
+    </div>
   );
 }
