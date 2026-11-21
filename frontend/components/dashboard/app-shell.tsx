@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { AppSidebar } from "./app-sidebar";
@@ -19,24 +19,37 @@ function getPageTitle(pathname: string) {
     return "Assessment Details";
   }
 
-  return "Overview";
+  if (pathname === "/dashboard") {
+    return "Overview";
+  }
+
+  return "Workspace";
 }
 
 export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+  // Close mobile navigation after route changes.
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F7FAFF]">
+      {/* Application sidebar */}
       <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen lg:pl-72">
+      {/* Main application area */}
+      <div className="min-h-screen lg:pl-[280px]">
+        {/* Application header */}
         <AppHeader
           title={getPageTitle(pathname)}
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <main className="min-h-[calc(100vh-5rem)]">{children}</main>
+        {/* Page content */}
+        <main className="min-h-[calc(100vh-72px)]">{children}</main>
       </div>
     </div>
   );
