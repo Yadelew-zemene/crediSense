@@ -1,22 +1,44 @@
 @import "tailwindcss";
 
+/* =========================================================
+   CrediSense — Global Design System
+   ========================================================= */
+
 :root {
-  --background: #f8fafc;
+  /* Backgrounds */
+  --background: #f7faff;
   --foreground: #0f172a;
 
-  --primary: #155eef;
-  --primary-dark: #0b1f3a;
+  /* Brand */
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #eff6ff;
   --accent: #06b6d4;
 
+  /* Surfaces */
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
+  --surface-blue: #f0f7ff;
 
+  /* Text */
   --muted: #64748b;
-  --border: #e2e8f0;
+  --muted-light: #94a3b8;
 
+  /* Borders */
+  --border: #e2e8f0;
+  --border-blue: #dbeafe;
+
+  /* Status */
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
+
+  /* Effects */
+  --shadow-soft: 0 4px 20px rgb(15 23 42 / 0.04);
+  --shadow-blue: 0 8px 24px rgb(37 99 235 / 0.10);
+
+  /* Radius */
+  --radius-card: 1rem;
 }
 
 @theme inline {
@@ -25,13 +47,18 @@
 
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
   --color-accent: var(--accent);
 
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-blue: var(--surface-blue);
 
   --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+
   --color-border: var(--border);
+  --color-border-blue: var(--border-blue);
 
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -41,21 +68,29 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* =========================================================
+   Base
+   ========================================================= */
+
 * {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Consistent form typography */
 button,
 a,
 input,
@@ -64,7 +99,61 @@ textarea {
   font: inherit;
 }
 
+/* Better keyboard accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+/* Text selection */
 ::selection {
-  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  background: rgb(37 99 235 / 0.16);
   color: var(--primary-dark);
+}
+
+/* Smooth anchor navigation */
+[id] {
+  scroll-margin-top: 6rem;
+}
+
+/* =========================================================
+   Scrollbars
+   ========================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* =========================================================
+   Reduced motion accessibility
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
