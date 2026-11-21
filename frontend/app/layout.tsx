@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { AuthProvider } from "@/context/auth-context";
+import { Footer} from "@/components/footer"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,12 +16,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://credisense.com"), // Replace if your domain differs.
   title: {
     default: "CrediSense | AI Credit Risk Assessment",
     template: "%s | CrediSense",
   },
   description:
-    "AI-powered credit risk assessment for clearer, data-driven lending decisions.",
+    "Assess credit risk with AI-powered insights. CrediSense helps lending organizations make more informed, data-driven assessments.",
+  applicationName: "CrediSense",
+  openGraph: {
+    title: "CrediSense | AI Credit Risk Assessment",
+    description:
+      "AI-powered credit risk insights for more informed lending assessments.",
+    siteName: "CrediSense",
+    type: "website",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -34,9 +48,11 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <AuthProvider>{children}</AuthProvider>
+        <Footer/>
       </body>
+
     </html>
   );
 }
