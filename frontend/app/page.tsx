@@ -1,5 +1,4 @@
 import { CtaSection } from "@/components/cta-section";
-import { Footer } from "@/components/footer";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { ModelStats } from "@/components/model-stats";

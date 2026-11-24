@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BrainCircuit, Mail, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Mail, ShieldCheck } from "lucide-react";
 
 const SUPPORT_EMAIL = "support@credisense.com";
 
