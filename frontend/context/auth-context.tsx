@@ -55,9 +55,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Restore the authenticated session when the application starts.
   useEffect(() => {
-    void refreshUser();
-  }, [refreshUser]);
+    let isActive = true;
+
+    const initializeAuth = async () => {
+      try {
+        const response = await getCurrentUser();
+
+        if (!isActive) return;
+
+        setUser(response.user);
+        setCompany(response.company);
+      } catch {
+        if (!isActive) return;
+
+        setUser(null);
+        setCompany(null);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void initializeAuth();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const login = async (credentials: LoginRequest) => {
     const response = await loginRequest(credentials);

@@ -116,7 +116,7 @@ export default function LoginPage() {
             </h1>
 
             <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-500">
-              Sign in to your CrediSense workspace to manage your organization's
+              Sign in to your CrediSense workspace to manage your organizations
               credit risk assessments.
             </p>
           </div>
@@ -242,7 +242,7 @@ export default function LoginPage() {
               {/* Registration */}
               <div className="mt-7 border-t border-slate-100 pt-6 text-center">
                 <p className="text-sm text-slate-500">
-                  Don't have a company account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/register"
                     className="font-semibold text-blue-600 transition hover:text-blue-700 hover:underline"
@@ -257,7 +257,7 @@ export default function LoginPage() {
           {/* Security information */}
           <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-400">
             <LockKeyhole size={14} />
-            Secure access to your organization's workspace.
+            Secure access to your organization workspace.
           </div>
 
           {/* Footer */}

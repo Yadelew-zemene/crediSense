@@ -6,7 +6,6 @@ import type {
   CompanyRegistrationRequest,
   LoginRequest,
   AuthResponse,
-  UserResponse,
 } from "./types";
 export type {
   AssessmentHistoryItem,
