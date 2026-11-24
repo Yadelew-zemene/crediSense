@@ -3,8 +3,6 @@
 import { useState } from "react";
 import {
   AlertCircle,
-  ArrowRight,
-  CheckCircle2,
   RotateCcw,
   ShieldCheck,
 } from "lucide-react";

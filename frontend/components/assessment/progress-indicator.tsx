@@ -17,10 +17,6 @@ export function ProgressIndicator({
 }: ProgressIndicatorProps) {
   const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
-  const progress =
-    steps.length > 1
-      ? (Math.max(currentIndex, 0) / (steps.length - 1)) * 100
-      : 100;
 
   const currentStepData = steps[currentIndex];
 
