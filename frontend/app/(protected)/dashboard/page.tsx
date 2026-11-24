@@ -36,9 +36,33 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    loadAssessments();
-  }, [loadAssessments]);
+useEffect(() => {
+  let isActive = true;
+
+  const fetchInitialAssessments = async () => {
+    try {
+      const data = await getAssessments();
+
+      if (isActive) {
+        setAssessments(data);
+      }
+    } catch {
+      if (isActive) {
+        setError("Unable to load assessment data. Please try again.");
+      }
+    } finally {
+      if (isActive) {
+        setLoading(false);
+      }
+    }
+  };
+
+  void fetchInitialAssessments();
+
+  return () => {
+    isActive = false;
+  };
+}, []);
 
   // Assessment statistics
   const totalAssessments = assessments.length;
@@ -159,7 +183,7 @@ export default function DashboardPage() {
                 Assessment Overview
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Summary of your company's assessment activity.
+                Summary of your company&apos;s assessment activity.
               </p>
             </div>
 
@@ -425,7 +449,7 @@ export default function DashboardPage() {
               </h3>
 
               <p className="mt-1 text-sm text-slate-500">
-                Review your company's previous credit risk assessments.
+                Review your company&apos;s previous credit risk assessments.
               </p>
             </div>
 

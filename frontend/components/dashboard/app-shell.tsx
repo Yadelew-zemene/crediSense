@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { AppSidebar } from "./app-sidebar";
@@ -30,25 +30,16 @@ export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  // Close mobile navigation after route changes.
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
-
   return (
     <div className="min-h-screen bg-[#F7FAFF]">
-      {/* Application sidebar */}
       <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main application area */}
       <div className="min-h-screen lg:pl-[280px]">
-        {/* Application header */}
         <AppHeader
           title={getPageTitle(pathname)}
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        {/* Page content */}
         <main className="min-h-[calc(100vh-72px)]">{children}</main>
       </div>
     </div>

@@ -528,49 +528,49 @@ export default function AssessmentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!assessmentId) {
-      setLoading(false);
-      setError("Assessment ID is missing.");
-      return;
-    }
+useEffect(() => {
+  if (!assessmentId) return;
 
-    let cancelled = false;
+  let cancelled = false;
 
-    async function loadAssessment() {
-      try {
-        setLoading(true);
-        setError(null);
-        setAssessment(null);
+  async function loadAssessment() {
+    try {
+      setLoading(true);
+      setError(null);
+      setAssessment(null);
 
-        const data = await getAssessment(assessmentId);
+      const data = await getAssessment(assessmentId);
 
-        if (!cancelled) {
-          setAssessment(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Unable to load assessment.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (!cancelled) {
+        setAssessment(data);
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setError(
+          err instanceof Error ? err.message : "Unable to load assessment.",
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
       }
     }
-
-    loadAssessment();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [assessmentId]);
-
-  if (loading) {
-    return <LoadingState />;
   }
+
+  void loadAssessment();
+
+  return () => {
+    cancelled = true;
+  };
+}, [assessmentId]);
+
+ if (!assessmentId) {
+   return <ErrorState message="Assessment ID is missing." />;
+ }
+
+ if (loading) {
+   return <LoadingState />;
+ }
 
   if (error || !assessment) {
     return <ErrorState message={error ?? "Assessment not found."} />;

@@ -9,8 +9,6 @@ import {
   CircleAlert,
   Clock3,
   FileSearch,
-  Loader2,
-  RefreshCw,
   ShieldCheck,
 } from "lucide-react";
 
